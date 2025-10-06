@@ -1,17 +1,20 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import Sismic from '@images/tracciato.png';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { FiGithub } from 'react-icons/fi';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Context } from '@components/modules/context';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
 export default function NavbarMenu() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [star, setStar] = useState('');
   const [isOpen, setIsOpen] = useState(false); // hamburger mobile
   const [isOpenDropdown, setIsOpenDropdown] = useState(false); // user dropdown desktop
+  const [isMoreOpen, setIsMoreOpen] = useState(false); // secondary nav dropdown
+  const moreMenuRef = useRef(null);
   const { userLogin, isLoggedIn, setIsLoggedIn, setUserLogin } =
     useContext(Context);
 
@@ -20,21 +23,40 @@ export default function NavbarMenu() {
     setIsOpenDropdown(false);
   }, [isLoggedIn]);
 
-  const listItems = [
+  const primaryLinks = [
     { name: 'Home', path: '/' },
     { name: 'Explore Data', path: '/explore-data' },
+    { name: 'Use Cases', path: '/use-cases' },
+    { name: 'About', path: '/about' },
+  ];
+
+  const secondaryLinks = [
     { name: 'API Access', path: '/api-access' },
     { name: 'Docs', path: '/docs' },
-    { name: 'Use Cases', path: '/use-cases' },
     { name: 'Blog', path: '/blog' },
-    { name: 'About', path: '/about' },
+    { name: 'FAQ', path: '/faq' },
     { name: 'Contact', path: '/contact' },
-    {
-      name: 'FAQ',
-      path: '/faq',
-      // icon: QuestionMarkCircleIcon, // Import this from @heroicons/react if using Heroicons
-    },
   ];
+
+  const mobileLinks = [...primaryLinks, ...secondaryLinks];
+
+  useEffect(() => {
+    setIsMoreOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setIsMoreOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     setUserLogin({});
@@ -87,7 +109,7 @@ export default function NavbarMenu() {
       </a>
       {/* Menu Desktop */}
       <nav className='hidden lg:flex justify-center gap-6 gap-lg-8 text-[14px] xl:text-[16px]'>
-        {listItems.map((item) => (
+        {primaryLinks.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
@@ -102,6 +124,45 @@ export default function NavbarMenu() {
             {item.name}
           </NavLink>
         ))}
+        <div className='relative' ref={moreMenuRef}>
+          <button
+            type='button'
+            onClick={() => setIsMoreOpen((prev) => !prev)}
+            className={`flex items-center gap-1 transition-colors hover:text-purple-400 ${
+              isMoreOpen
+                ? 'text-purple-400 font-semibold border-b-2 border-purple-500 pb-[2px]'
+                : 'text-gray-300'
+            }`}
+            aria-haspopup='true'
+            aria-expanded={isMoreOpen}
+            aria-label='Open secondary navigation menu'
+          >
+            More
+            <span className={`transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+          {isMoreOpen && (
+            <div className='absolute right-0 mt-3 w-44 rounded-xl border border-purple-500/30 bg-black/80 backdrop-blur-xl p-3 shadow-lg'>
+              <div className='flex flex-col gap-2 text-sm text-gray-200'>
+                {secondaryLinks.map((item) => (
+                  <NavLink
+                    key={item.name}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `rounded-lg px-3 py-2 transition-colors hover:bg-purple-500/20 hover:text-purple-300 ${
+                        isActive ? 'text-purple-300 font-semibold' : ''
+                      }`
+                    }
+                    onClick={() => setIsMoreOpen(false)}
+                  >
+                    {item.name}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Auth Desktop */}
@@ -252,7 +313,7 @@ export default function NavbarMenu() {
       >
         {/* Mobile Links */}
         <div className='flex flex-col items-center gap-4 text-xl mb-4'>
-          {listItems.map((item) => (
+          {mobileLinks.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
