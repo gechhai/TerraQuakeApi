@@ -10,6 +10,7 @@ import routeContact from './routes/contactRoutes.js'
 import routeGetStart from './routes/testRoutes.js'
 import routeEarthquakes from './routes/earthquakesRoutes.js'
 import githubAuthRoute from './routes/githubAuthRoutes.js'
+import routePosts from './routes/postsRoutes.js'
 import dbConnect from './config/mongoConfig.js'
 import { authenticateUser } from './middleware/authMiddleware.js'
 import { apiLimiter, authLimiter, contactLimiter } from './middleware/rateLimiter.js'
@@ -58,6 +59,7 @@ app.use('/auth', cors(corsAuthOptions), authLimiter, routeAuth)
 app.use('/auth/github', cors(corsAuthOptions), authLimiter, githubAuthRoute)
 app.use('/users', cors(corsAuthOptions), authLimiter, authenticateUser, routeUsers)
 app.use('/contact', cors(corsAuthOptions), contactLimiter, routeContact)
+app.use('/api/posts', cors(corsAuthOptions), apiLimiter, authenticateUser, routePosts)
 
 // ===== ERROR HANDLER =====
 app.use((err, req, res, next) => {
